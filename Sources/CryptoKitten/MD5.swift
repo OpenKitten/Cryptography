@@ -32,7 +32,11 @@ fileprivate let k: [UInt32] = [ 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 fileprivate let chunkSize = 64
 
 public final class MD5 : Hash {
-    public static let littleEndian = true
+    #if arch(s390x)
+        public static let littleEndian = false
+    #else
+        public static let littleEndian = true
+    #endif
     public static let chunkSize = 64
     public static let digestSize = 16
     
@@ -76,7 +80,11 @@ public final class MD5 : Hash {
         buffer.reserveCapacity(16)
         
         func convert(_ int: UInt32) -> [UInt8] {
-            let int = int.littleEndian
+            #if arch(s390x)
+                let int = int.bigEndian
+            #else
+                let int = int.littleEndian
+            #endif
             return [
                 UInt8(int & 0xff),
                 UInt8((int >> 8) & 0xff),
@@ -115,7 +123,11 @@ public final class MD5 : Hash {
                 g = (7 &* i) % 16
             }
             
-            Mg = pointer.advanced(by: g << 2).withMemoryRebound(to: UInt32.self, capacity: 1, { $0.pointee })
+            #if arch(s390x)
+                Mg = UInt32(littleEndian: pointer.advanced(by: g << 2).withMemoryRebound(to: UInt32.self, capacity: 1, { $0.pointee }))
+            #else
+                Mg = pointer.advanced(by: g << 2).withMemoryRebound(to: UInt32.self, capacity: 1, { $0.pointee })
+            #endif
             
             F = F &+ a1 &+ k[i] &+ Mg
             a1 = d1

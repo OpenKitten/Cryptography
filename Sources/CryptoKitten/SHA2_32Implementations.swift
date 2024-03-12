@@ -1,5 +1,9 @@
 public final class SHA256 : SHA2_32 {
-    public static let littleEndian = false
+    #if arch(s390x)
+        public static let littleEndian = true
+    #else
+        public static let littleEndian = false
+    #endif
     public static let digestSize = 32
     public static let chunkSize = 64
     
@@ -16,7 +20,11 @@ public final class SHA256 : SHA2_32 {
         buffer.reserveCapacity(32)
         
         func convert(_ int: UInt32) -> [UInt8] {
-            let int = int.bigEndian
+            #if arch(s390x)
+                let int = int.littleEndian
+            #else
+                let int = int.bigEndian
+            #endif
             return [
                 UInt8(int & 0xff),
                 UInt8((int >> 8) & 0xff),
@@ -70,7 +78,11 @@ public final class SHA256 : SHA2_32 {
 }
 
 public final class SHA224 : SHA2_32 {
-    public static let littleEndian = false
+    #if arch(s390x)
+        public static let littleEndian = true
+    #else
+        public static let littleEndian = false
+    #endif
     public static let digestSize = 28
     public static let chunkSize = 64
     
@@ -98,7 +110,11 @@ public final class SHA224 : SHA2_32 {
         buffer.reserveCapacity(28)
         
         func convert(_ int: UInt32) -> [UInt8] {
-            let int = int.bigEndian
+            #if arch(s390x)
+                let int = int.littleEndian
+            #else
+                let int = int.bigEndian
+            #endif
             return [
                 UInt8(int & 0xff),
                 UInt8((int >> 8) & 0xff),

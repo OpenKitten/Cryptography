@@ -1,5 +1,9 @@
 public final class SHA512 : SHA2_64 {
-    public static let littleEndian = false
+    #if arch(s390x)
+        public static let littleEndian = true
+    #else
+        public static let littleEndian = false
+    #endif
     public static let digestSize = 64
     public static let chunkSize = 128
     
@@ -16,7 +20,11 @@ public final class SHA512 : SHA2_64 {
         buffer.reserveCapacity(32)
         
         func convert(_ int: UInt64) -> [UInt8] {
-            let int = int.bigEndian
+            #if arch(s390x)
+                let int = int.littleEndian
+            #else
+                let int = int.bigEndian
+            #endif
             return [
                 UInt8(int & 0xff),
                 UInt8((int >> 8) & 0xff),
@@ -75,7 +83,11 @@ public final class SHA512 : SHA2_64 {
 
 
 public final class SHA384: SHA2_64 {
-    public static let littleEndian = false
+    #if arch(s390x)
+        public static let littleEndian = true
+    #else
+        public static let littleEndian = false
+    #endif
     public static let digestSize = 48
     public static let chunkSize = 128
     
@@ -92,7 +104,11 @@ public final class SHA384: SHA2_64 {
         buffer.reserveCapacity(32)
         
         func convert(_ int: UInt64) -> [UInt8] {
-            let int = int.bigEndian
+            #if arch(s390x)
+                let int = int.littleEndian
+            #else
+                let int = int.bigEndian
+            #endif
             return [
                 UInt8(int & 0xff),
                 UInt8((int >> 8) & 0xff),

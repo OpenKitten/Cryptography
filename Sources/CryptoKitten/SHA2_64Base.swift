@@ -37,14 +37,22 @@ internal protocol SHA2_64 : Hash {
 
 extension SHA2_64 {
     public func update(pointer: UnsafePointer<UInt8>) {
-        var w = pointer.withMemoryRebound(to: UInt64.self, capacity: 16, { pointer in
-            return [
-                pointer[0].bigEndian, pointer[1].bigEndian, pointer[2].bigEndian, pointer[3].bigEndian,
-                pointer[4].bigEndian, pointer[5].bigEndian, pointer[6].bigEndian, pointer[7].bigEndian,
-                pointer[8].bigEndian, pointer[9].bigEndian, pointer[10].bigEndian, pointer[11].bigEndian,
-                pointer[12].bigEndian, pointer[13].bigEndian, pointer[14].bigEndian, pointer[15].bigEndian,
-                ]
-        })
+        #if arch(s390x)
+            var w : [UInt64] = []
+            w.reserveCapacity(16)
+            for index in stride(from: 0, to: 128, by: 8) {
+                w.append(UInt64(bigEndian: pointer.advanced(by: index).withMemoryRebound(to: UInt64.self, capacity: 1, { $0.pointee })))
+            }
+        #else
+            var w = pointer.withMemoryRebound(to: UInt64.self, capacity: 16, { pointer in
+                return [
+                    pointer[0].bigEndian, pointer[1].bigEndian, pointer[2].bigEndian, pointer[3].bigEndian,
+                    pointer[4].bigEndian, pointer[5].bigEndian, pointer[6].bigEndian, pointer[7].bigEndian,
+                    pointer[8].bigEndian, pointer[9].bigEndian, pointer[10].bigEndian, pointer[11].bigEndian,
+                    pointer[12].bigEndian, pointer[13].bigEndian, pointer[14].bigEndian, pointer[15].bigEndian,
+                    ]
+            })
+        #endif
         
         w.reserveCapacity(64)
         

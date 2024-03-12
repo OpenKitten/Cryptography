@@ -1,7 +1,11 @@
 public final class SHA1 : Hash {
     public static let digestSize = 20
     public static let chunkSize = 64
-    public static let littleEndian = false
+    #if arch(s390x)
+        public static let littleEndian = true
+    #else
+        public static let littleEndian = false
+    #endif
     
     var h0: UInt32 = 0x67452301
     var h1: UInt32 = 0xEFCDAB89
@@ -40,7 +44,11 @@ public final class SHA1 : Hash {
         buffer.reserveCapacity(20)
         
         func convert(_ int: UInt32) -> [UInt8] {
-            let int = int.bigEndian
+            #if arch(s390x)
+                let int = int.littleEndian
+            #else
+                let int = int.bigEndian
+            #endif
             return [
                 UInt8(int & 0xff),
                 UInt8((int >> 8) & 0xff),
@@ -61,14 +69,22 @@ public final class SHA1 : Hash {
     public init() {}
     
     public func update(pointer: UnsafePointer<UInt8>) {
-        var w = pointer.withMemoryRebound(to: UInt32.self, capacity: 16, { pointer in
-            return [
-                pointer[0].bigEndian, pointer[1].bigEndian, pointer[2].bigEndian, pointer[3].bigEndian,
-                pointer[4].bigEndian, pointer[5].bigEndian, pointer[6].bigEndian, pointer[7].bigEndian,
-                pointer[8].bigEndian, pointer[9].bigEndian, pointer[10].bigEndian, pointer[11].bigEndian,
-                pointer[12].bigEndian, pointer[13].bigEndian, pointer[14].bigEndian, pointer[15].bigEndian,
-            ]
-        })
+        #if arch(s390x)
+            var w : [UInt32] = []
+            w.reserveCapacity(16)
+            for index in stride(from: 0, to: 64, by: 4) {
+                w.append(UInt32(bigEndian: pointer.advanced(by: index).withMemoryRebound(to: UInt32.self, capacity: 1, { $0.pointee })))
+            }
+        #else
+            var w = pointer.withMemoryRebound(to: UInt32.self, capacity: 16, { pointer in
+                return [
+                    pointer[0].bigEndian, pointer[1].bigEndian, pointer[2].bigEndian, pointer[3].bigEndian,
+                    pointer[4].bigEndian, pointer[5].bigEndian, pointer[6].bigEndian, pointer[7].bigEndian,
+                    pointer[8].bigEndian, pointer[9].bigEndian, pointer[10].bigEndian, pointer[11].bigEndian,
+                    pointer[12].bigEndian, pointer[13].bigEndian, pointer[14].bigEndian, pointer[15].bigEndian,
+                ]
+            })
+        #endif
 
         w.reserveCapacity(80)
 
